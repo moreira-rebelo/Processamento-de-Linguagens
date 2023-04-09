@@ -1,7 +1,11 @@
 import ply.lex as lex
+from funcoes import slurp
 
-tokens = ("1c", "2c", "5c", "10c", "20c", "50c", "1e", "2e")
+tokens = ("1c", "2c", "5c", "10c", "20c", "50c", "1e", "2e", "ESPACO")
 total = 0
+twix = 1.50
+aux = 0
+
 
 def t_1c(t):
     r"1c"
@@ -59,11 +63,21 @@ def t_error(t):
     print("Token inesperado")
     exit(1)
 
+def t_ESPACO(t):
+    r"[ ]+"
+    pass
+
 lexer = lex.lex()
-lexer.input("1c")
-lexer.token()
-lexer.input("2c")
-lexer.token()
+lexer.input(slurp("tokens.txt"))
 
-print(f"Total: {total}")
+for tok in lexer:
+    pass
 
+print(f"Total inserido: {total:0.2f}€\n")
+
+if total < twix:
+    aux = twix - total
+    print(f"Saldo insuficiente! Faltam: {aux:0.2f}€\n")
+elif total >= twix:
+    aux = total - twix
+    print(f"Vendido! Troco: {aux:0.2f}€\n")
