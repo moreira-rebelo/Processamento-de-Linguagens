@@ -1,33 +1,32 @@
-"""
-Processamento de Linguagens
-Trabalho Prático 1 - Parte 2
-
-Grupo 19
-
-a16443 - Francisco Rebêlo
-a21958 - Gabriel Jablonsky
-a23525 - Diogo Parente
-"""
-
 import ply.lex as lex  #biblioteca lex
 import re  #suporte para expressões regulares
 from funcoes import slurp
 
-#-------------TOKENS-------------
+#Tokens
 tokens = ("c1", "c2", "c5", "c10", "c20", "c50", "e1", "e2",
           "QUANTIA", "PRODUTO", "CANCELAR", "LISTAR_STOCK", "LISTAR_MEALHEIRO")
 
-#-------------DICIONÁRIOS-------------
+#Dicionário de moedas
 valoresMoedas = {'c1': 0.01, 'c2': 0.02, 'c5': 0.05, 'c10': 0.10, 'c20': 0.20, 'c50': 0.50, 'e1': 1.00, 'e2': 2.00}
+
+#Dicionário de produtos
 produtos = {"twix": 2.30, "lanche": 2.50, "croissant": 2.50}
 
 #-------------VARIÁVEIS-------------
-total = 0; aux = 0; auxStrings = 'a'; totalGuardar = 0
+total = 0
+aux = 0
+manterTroco = 0
+auxStrings = 'a'
+
+#Moedas:
 qttC1 = 50; qttC2 = 50; qttC5 = 50; qttC10 = 50; qttC20 = 50; qttC50 = 25; qttE1 = 20; qttE2 = 10
+
 tC1 = 0; tC2 = 0; tC5 = 0; tC10 = 0; tC20 = 0; tC50 = 0; tE1 = 0; tE2 = 0
+
+#Produtos:
 qttCroissant = 7; qttLanche = 7; qttTwix = 10
 
-#-------------FUNÇÕES COM VALIDAÇÃO DE EXPRESSÕES REGULARES-------------
+#Funções para validação de expressões regulares
 def t_QUANTIA(t):
     r'QUANTIA\s+(c[0-9]?[0-9]?|e[1-9])(\s*,\s*(c[0-9]?[0-9]?|e[1-9]))*\s*\.' #QUANTIA + espaços + moeda +  mais moedas ou nada + espaços + teminação com '.'
     listaDeMoedas = re.findall(r'(c[0-9]?[0-9]?|e[1-9])', t.value) #proura em t.value por todas as ocurrências de moedas
@@ -121,7 +120,47 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
-#-------------PROGRAMA-------------
+def troco(aux):
+    global qttE2, qttE1, qttC50, qttC20, qttC10, qttC5, qttC2, qttC1
+    global tE2, tE1, tC50, tC20, tC10, tC5, tC2, tC1
+
+    while total > 0:
+        while aux >= 2 and qttE2 > 0:
+            tE2 += 1
+            aux -= 2
+            qttE2 -= 1
+        while aux >= 1 and qttE1 > 0:
+            tE1 += 1
+            aux -= 1
+            qttE1 -= 1
+        while aux >= 0.5 and qttC50 > 0:
+            tC50 += 1
+            aux -= 0.5
+            qttC50 -= 1
+        while aux >= 0.2 and qttC20 > 0:
+            tC20 += 1
+            aux -= 0.2
+            qttC20 -= 1
+        while aux >= 0.1 and qttC10 > 0:
+            tC10 += 1
+            aux -= 0.1
+            qttC10 -= 1
+        while aux >= 0.05 and qttC5 > 0:
+            tC5 += 1
+            aux -= 0.05
+            qttC5 -= 1
+        while aux >= 0.02 and qttC2 > 0:
+            tC2 += 1
+            aux -= 0.02
+            qttC2 -= 1
+        while aux >= 0.01 and qttC1 > 0:
+            tC1 += 1
+            aux -= 0.01
+            qttC1 -= 1
+        if aux > 0 and aux < 0.01:
+            aux = -1
+
+
 lexer = lex.lex()
 lexer.input(slurp("tokens.txt"))
 
@@ -130,81 +169,8 @@ for tok in lexer:
         print(f"Crédito: €{total:0.2f}\n")
 
     elif tok.type == 'CANCELAR':
-        totalGuardar = total
-        while total > 0:
-            while total >= 2 and qttE2 > 0:
-                tE2 += 1
-                total -= 2
-                qttE2 -= 1
-
-            while total >= 1 and qttE1 > 0:
-                tE1 += 1
-                total -= 1
-                qttE1 -= 1
-
-            while total >= 0.5 and qttC50 > 0:
-                tC50 += 1
-                total -= 0.5
-                qttC50 -= 1
-
-            while total >= 0.2 and qttC20 > 0:
-                tC20 += 1
-                total -= 0.2
-                qttC20 -= 1
-
-            while total >= 0.1 and qttC10 > 0:
-                tC10 += 1
-                total -= 0.1
-                qttC10 -= 1
-
-            while total >= 0.05 and qttC5 > 0:
-                tC5 += 1
-                total -= 0.05
-                qttC5 -= 1
-
-            while total >= 0.02 and qttC2 > 0:
-                tC2 += 1
-                total -= 0.02
-                qttC2 -= 1
-
-            while total >= 0.01 and qttC1 > 0:
-                tC1 += 1
-                total -= 0.01
-                qttC1 -= 1
-
-            if 0 < total < 0.01:
-                total = -1
-
-        if 0 < totalGuardar < 0.01:
-            print(f"Sem troco!\n")
-        else:
-            print(f"Devolução: €{totalGuardar:0.2f}")
-            print(f"Devolvido sob a forma de:")
-            if tE2 > 0:
-                print(f"{tE2} moedas de 2€")
-                tE2 = 0
-            if tE1 > 0:
-                print(f"{tE1} moedas de 1€")
-                tE1 = 0
-            if tC50 > 0:
-                print(f"{tC50} moedas de 50c")
-                tC50 = 0
-            if tC20 > 0:
-                print(f"{tC20} moedas de 20c")
-                tC20 = 0
-            if tC10 > 0:
-                print(f"{tC10} moedas de 10c")
-                tC10 = 0
-            if tC5 > 0:
-                print(f"{tC5} moedas de 5c")
-                tC5 = 0
-            if tC2 > 0:
-                print(f"{tC2} moedas de 2c")
-                tC2 = 0
-            if tC1 > 0:
-                print(f"{tC1} moedas de 1c")
-                tC1 = 0
-            print("\n")
+        troco(total)
+        print(f"Valor devolvido: €{total:0.2f}\n")
 
     elif tok.type == 'PRODUTO':
         print(f"Preço de {auxStrings}: €{aux:0.2f}\n")
@@ -216,61 +182,18 @@ for tok in lexer:
         elif total >= aux:
             aux = total - aux
             total = 0
+            manterTroco = aux
 
             if aux > 0:
-                totalGuardar = total
-                while aux > 0:
-                    while aux >= 2 and qttE2 > 0:
-                        tE2 += 1
-                        aux -= 2
-                        qttE2 -= 1
 
-                    while aux >= 1 and qttE1 > 0:
-                        tE1 += 1
-                        aux -= 1
-                        qttE1 -= 1
-
-                    while aux >= 0.5 and qttC50 > 0:
-                        tC50 += 1
-                        aux -= 0.5
-                        qttC50 -= 1
-
-                    while aux >= 0.2 and qttC20 > 0:
-                        tC20 += 1
-                        aux -= 0.2
-                        qttC20 -= 1
-
-                    while aux >= 0.1 and qttC10 > 0:
-                        tC10 += 1
-                        aux -= 0.1
-                        qttC10 -= 1
-
-                    while aux >= 0.05 and qttC5 > 0:
-                        tC5 += 1
-                        aux -= 0.05
-                        qttC5 -= 1
-
-                    while aux >= 0.02 and qttC2 > 0:
-                        tC2 += 1
-                        aux -= 0.02
-                        qttC2 -= 1
-
-                    while aux >= 0.01 and qttC1 > 0:
-                        tC1 += 1
-                        aux -= 0.01
-                        qttC1 -= 1
-
-                    if 0 < aux < 0.01:
-                        aux = -1
+                troco(aux)
 
                 print(f"Vendido!")
 
-                total = 0
-
-                if aux < 0:
-                    print(f"Sem troco!\n")
+                if manterTroco == 0:
+                    print(f"Sem troco!")
                 else:
-                    print(f"Troco: €{totalGuardar:0.2f}")
+                    print(f"Troco: €{manterTroco:0.2f}")
                     print(f"Devolvido sob a forma de:")
                     if tE2 > 0:
                         print(f"{tE2} moedas de 2€")
@@ -295,8 +218,7 @@ for tok in lexer:
                         tC2 = 0
                     if tC1 > 0:
                         print(f"{tC1} moedas de 1c")
-                        tC1 = 0
-                    print("\n")
+                        tE2 = 0
 
             if auxStrings == 'twix':
                 qttTwix -= 1
@@ -319,6 +241,7 @@ for tok in lexer:
         print(f"C50: {qttC50:d}")
         print(f"E1: {qttE1:d}")
         print(f"E2: {qttE2:d}")
+
 
     else:
         print("Token inesperado:", tok.value)
